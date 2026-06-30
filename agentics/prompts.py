@@ -1,6 +1,14 @@
-from imports.safe_imports import get_llm
 from typing import Any
 import json
+from .trie import build_trie, allowed_next_tokens, constrained_next_token
+
+
+def is_end(trie, token_seq):
+    node = trie
+    for t in token_seq:
+        node = node["children"][t]
+    return node["end"]
+
 
 
 def promptify(user_text: str, functions: Any) -> str:
@@ -24,52 +32,48 @@ def promptify(user_text: str, functions: Any) -> str:
     )
 
 
-def handle_prompt(llm: any, prompt: str, functions: str) -> str:
-    output = promptify(prompt, functions)
-    tokens = llm.encode()
+def handle_name(functions: Any, llm: Any, input: str) -> str:
+    output = ""
+    names = ""
 
+    function_names = [f["name"] for f in functions]
+    trie = build_trie(function_names, llm)
 
-def main() -> None:
-    pass
-    llm = get_llm()()
+    tokens = llm.encode(input).tolist()[0]
 
-    prompt = promptify("What is 6 times 7?")
-    tokens = llm.encode(prompt).tolist()[0]
+    name_tokens = []
 
-    MAX_NEW_TOKENS = 1000
-    SOS_TOKEN_ID = llm._tokenizer.convert_tokens_to_ids("<|im_start|>") # dont use this in the final project
-    EOS_TOKEN_ID = llm._tokenizer.convert_tokens_to_ids("<|im_end|>") # dont use this in final project
-    THINK_START = llm._tokenizer.convert_tokens_to_ids("<think>")
-    THINK_END = llm._tokenizer.convert_tokens_to_ids("</think>")
+    current = None
 
-    temperature = 0.8
-    K = 50
-
-    for _ in range(MAX_NEW_TOKENS):
+    while True:
         logits = llm.get_logits_from_input_ids(tokens)
 
-        # 1. restrict to top-k
-        top_k = sorted(range(len(logits)),
-                       key=lambda i: logits[i],
-                       reverse=True)[:K]
+        allowed = allowed_next_tokens(trie, name_tokens)
 
-        # 2. softmax over top-k only
-        sub_logits = [logits[i] / temperature for i in top_k]
-
-        m = max(sub_logits)
-        probs = [math.exp(l - m) for l in sub_logits]
-        s = sum(probs)
-        probs = [p / s for p in probs]
-
-        # 3. sample
-        next_token = random.choices(top_k, weights=probs, k=1)[0]
-
-        if next_token == EOS_TOKEN_ID:
+        if not allowed:
             break
 
-        print(llm.decode([next_token]), end="", flush=True)
-        tokens.append(next_token)
+        current = constrained_next_token(logits, allowed)
 
-    print("\nCompleted!")
+        tokens.append(current)
+        name_tokens.append(current)
 
-    # print(llm.decode(tokens))
+        decode = llm.decode([current])
+        names += decode
+        output += decode
+
+        if is_end(trie, name_tokens):
+            break
+
+    return output
+
+
+def handle_prompt(llm: Any, prompt: str, functions: str) -> str:
+    output = promptify(prompt, functions)
+    output = output + '{\n\t"prompt": "' + prompt + '",\n\t"name": "'
+    print('{\n\t"prompt": "' + prompt + '",\n\t"name": "', end="", flush=True)
+
+    fn_name = handle_name(functions, llm, output)
+    output += fn_name + '",\n\t"parameters":'
+
+    return output

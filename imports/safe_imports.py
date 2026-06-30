@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 def configure_local_download_cache() -> None:
-    cache_root = Path(__file__).resolve().parent / "llm_sdk/.cache"
+    cache_root = Path(__file__).resolve().parent / "../llm_sdk/.cache"
     huggingface_cache_root = cache_root / "huggingface"
     torch_cache_root = cache_root / "torch"
     xdg_cache_root = cache_root / "xdg"

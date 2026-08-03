@@ -16,3 +16,14 @@ def get_data_from_input(input: str, functions: str) -> Dict[str, Any]:
     except Exception as e:
         raise FileToJSONError(f"Error reading/parsing from {functions}: {e}")
     return {"input": input_data, "functions": function_data}
+
+
+def load_to_json(json_str: str) -> Any:
+    return json.loads(json_str)
+
+
+# This is here for a very particular case where when extracting the JSON data
+# from calling_tests it doesnt add a \ before some of the "s,
+# which later breaks json.loads
+def dump_json(string: str) -> str:
+    return json.dumps(string)

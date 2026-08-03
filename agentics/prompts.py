@@ -3,12 +3,15 @@ import json
 from .trie import build_trie, allowed_next_tokens, constrained_next_token
 
 
+BLACKLIST = ',{}"[]()\t\n'
+REGEX_BLACKLIST = '",'
+
+
 def is_end(trie, token_seq):
     node = trie
     for t in token_seq:
         node = node["children"][t]
     return node["end"]
-
 
 
 def promptify(user_text: str, functions: Any) -> str:
@@ -68,12 +71,79 @@ def handle_name(functions: Any, llm: Any, input: str) -> str:
     return output
 
 
-def handle_prompt(llm: Any, prompt: str, functions: str) -> str:
-    output = promptify(prompt, functions)
-    output = output + '{\n\t"prompt": "' + prompt + '",\n\t"name": "'
-    print('{\n\t"prompt": "' + prompt + '",\n\t"name": "', end="", flush=True)
+def handle_params(functions: Any,
+                  llm: Any,
+                  input: str,
+                  fn_name: str) -> str:
+    selected_function = None
+    for function in functions:
+        if function["name"] == fn_name:
+            selected_function = function
+            break
 
-    fn_name = handle_name(functions, llm, output)
+    if selected_function is None:
+        raise ValueError(f"Unknown function: {fn_name}")
+
+    output = '{'
+
+    params = selected_function["parameters"]
+
+    for i, (param_name, param_info) in enumerate(params.items()):
+        output += f'"{param_name}": '
+
+        param_type = param_info["type"]
+        if param_name == "regex":
+            blacklist = REGEX_BLACKLIST
+        else:
+            blacklist = BLACKLIST
+        if param_type == "string":
+            output += '"'
+
+        llm_output = ""
+
+        tokens = llm.encode(input + output).tolist()[0]
+
+        while True:
+            logits = llm.get_logits_from_input_ids(tokens)
+
+            next_token = max(range(len(logits)), key=logits.__getitem__)
+
+            text = llm.decode([next_token])
+
+            if any(c in blacklist for c in text):
+                llm_output += text.strip(blacklist)
+
+                if param_type == "number":
+                    value = float(llm_output)
+
+                    output += str(value)
+
+                elif param_type == "string":
+                    output += llm_output + '"'
+
+                if i < len(params) - 1:
+                    output += ", "
+                break
+
+            else:
+                tokens.append(next_token)
+                llm_output += text
+
+    return output
+
+
+def handle_prompt(llm: Any, prompt: str, functions: str) -> str:
+    input = promptify(prompt, functions)
+
+    input = input + '{\n\t"prompt": ' + prompt + ',\n\t"name": "'
+    output = '{\n\t"prompt": ' + prompt + ',\n\t"name": "'
+
+    fn_name = handle_name(functions, llm, input)
+    input += fn_name + '",\n\t"parameters":'
     output += fn_name + '",\n\t"parameters":'
+
+    fn_params = handle_params(functions, llm, input, fn_name)
+    input += fn_params + '}\n}'
+    output += fn_params + '}\n}'
 
     return output

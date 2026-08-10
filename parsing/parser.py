@@ -26,4 +26,4 @@ def load_to_json(json_str: str) -> Any:
 # from calling_tests it doesnt add a \ before some of the "s,
 # which later breaks json.loads
 def dump_json(string: str) -> str:
-    return json.dumps(string)
+    return json.dumps(string, indent=2)

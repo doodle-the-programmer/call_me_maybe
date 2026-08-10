@@ -21,6 +21,12 @@ def promptify(user_text: str, functions: Any) -> str:
         f"{json.dumps(functions, indent=2)}\n"
         f"Output exactly one JSON object.\n"
         f"Do not include Markdown, explanations, or surrounding text:\n"
+        f"'boolean' must be written according to Python: 'True' or 'False'\n"
+        f"'number' must be written according to Python's float type\n"
+        f"'integer' must be written according to Python's int type\n"
+        f"If the type is 'string' it could be anything "
+        f"from a name to a REGEX or SQL (in the correct text format)."
+        f"In the case of a string do not include single or double quotes"
         """
         {
             "prompt": "What is the sum of 2 and 3?",
@@ -115,6 +121,16 @@ def handle_params(functions: Any,
 
                 if param_type == "number":
                     value = float(llm_output)
+
+                    output += str(value)
+
+                elif param_type == "integer":
+                    value = int(llm_output)
+
+                    output += str(value)
+
+                elif param_type == "boolean":
+                    value = bool(llm_output)
 
                     output += str(value)
 

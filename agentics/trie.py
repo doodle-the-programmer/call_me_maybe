@@ -20,7 +20,7 @@ def allowed_next_tokens(trie_root, token_seq):
 
     for t in token_seq:
         if t not in node["children"]:
-            return set()  # invalid path (shouldn't happen)
+            return set()
         node = node["children"][t]
 
     return set(int(x) for x in node["children"].keys())

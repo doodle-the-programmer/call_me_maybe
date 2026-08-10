@@ -2,3 +2,4 @@
 .uv_cache
 .cache
 __pycache__
+.nfs*

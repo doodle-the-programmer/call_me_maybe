@@ -1,4 +1,5 @@
 def build_trie(function_names, llm):
+    """Build a trie of tokenized function names for constrained decoding."""
     root = {"children": {}, "end": False}
 
     for name in function_names:
@@ -16,6 +17,7 @@ def build_trie(function_names, llm):
 
 
 def allowed_next_tokens(trie_root, token_seq):
+    """Get valid token continuations from current position in trie."""
     node = trie_root
 
     for t in token_seq:
@@ -27,6 +29,7 @@ def allowed_next_tokens(trie_root, token_seq):
 
 
 def constrained_next_token(logits, allowed_tokens):
+    """Select the highest-scoring token from allowed set of tokens."""
     best = None
     best_val = float("-inf")
 

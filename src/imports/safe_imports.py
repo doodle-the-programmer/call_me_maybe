@@ -1,9 +1,9 @@
 import os
-import importlib
 from pathlib import Path
 
 
 def configure_local_download_cache() -> None:
+    """Configure HuggingFace and PyTorch cache directories."""
     cache_root = Path(__file__).resolve().parent / "../llm_sdk/.cache"
     huggingface_cache_root = cache_root / "huggingface"
     torch_cache_root = cache_root / "torch"
@@ -25,8 +25,3 @@ def configure_local_download_cache() -> None:
     os.environ["TRANSFORMERS_CACHE"] = str(transformers_cache_root)
     os.environ["TORCH_HOME"] = str(torch_cache_root)
     os.environ["XDG_CACHE_HOME"] = str(xdg_cache_root)
-
-
-def get_llm() -> any:
-    configure_local_download_cache()
-    return importlib.import_module("llm_sdk").Small_LLM_Model

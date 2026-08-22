@@ -3,3 +3,6 @@
 .cache
 __pycache__
 .nfs*
+.pytest_cache
+.coverage
+.mypy_cache

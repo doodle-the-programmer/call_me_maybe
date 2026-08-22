@@ -6,6 +6,7 @@ requires-python = ">=3.10"
 dependencies = [
     "llm-sdk",
     "pydantic>=2.0",
+    "accelerate"
 ]
 
 [project.optional-dependencies]

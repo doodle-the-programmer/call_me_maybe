@@ -20,6 +20,9 @@ help:
 install:
 	uv pip install -e .
 
+fix-accelerate:
+	uv pip install accelerate
+
 dev-install:
 	uv pip install -e ".[dev]"
 

@@ -60,7 +60,7 @@ def handle_name(functions: Any, llm: Any, input: str) -> str:
 
         trie = build_trie(function_names, llm)
         tokens = llm.encode(input).tolist()[0]
-        name_tokens = []
+        name_tokens: list = []
 
         for step in range(64):
             logits = llm.get_logits_from_input_ids(tokens)

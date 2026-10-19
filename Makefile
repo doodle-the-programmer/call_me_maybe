@@ -1,9 +1,10 @@
-.PHONY: help install dev-install run test lint format clean
+.PHONY: help install dev-install run test lint format clean venv
 
 help:
 	@echo "call_me_maybe - Function calling with a small LLM"
 	@echo ""
 	@echo "Available targets:"
+	@echo "  venv         Initialize a virtual environment"
 	@echo "  install      Install dependencies"
 	@echo "  dev-install  Install dependencies including dev tools (pytest, etc)"
 	@echo "  run          Run the pipeline with default arguments"
@@ -16,6 +17,10 @@ help:
 	@echo ""
 	@echo "Run with custom files:"
 	@echo "  make run DEFS=path/to/defs.json INPUT=path/to/input.json OUTPUT=path/to/output.json"
+
+venv:
+	python -m venv src/llm_sdk/.venv
+	src/llm_sdk/.venv/bin/activate
 
 install:
 	uv pip install -e .
@@ -41,20 +46,22 @@ test-cov:
 
 lint:
 	@echo "Running flake8..."
-	flake8 src/ tests/ --max-line-length=79 --count --show-source
+	flake8 src/agentics src/errors src/imports src/parsing tests/ --max-line-length=79 --count --show-source
 	@echo ""
 	@echo "Running mypy..."
-	mypy src/ --ignore-missing-imports
+	mypy src/agentics src/errors src/imports src/parsing tests/
 
 format:
 	@echo "Running black..."
-	black src/ tests/
+	black src/agentics src/errors src/imports src/parsing tests/
 	@echo ""
 	@echo "Running isort..."
-	isort src/ tests/
+	isort src/agentics src/errors src/imports src/parsing tests/
 
 clean:
 	@echo "Cleaning up..."
+	find . -type d -name .venv -exec rm -rf {} + 2>/dev/null || true
+	find . -type d -name .cache -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete
 	find . -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null || true

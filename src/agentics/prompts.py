@@ -150,8 +150,8 @@ def handle_params(functions: Any, llm: Any, input: str, fn_name: str) -> str:
                 )
 
             blacklist = REGEX_BLACKLIST if param_name == "regex" else BLACKLIST
-            if param_type == "string":
-                output += '"'
+            # if param_type == "string":
+            #     output += '"' #TODO THIS SEEMS TO ADD AN EXTRA '"' WHEN NOT NEEDED
 
             llm_output = ""
             tokens = llm.encode(input + output).tolist()[0]
@@ -167,15 +167,15 @@ def handle_params(functions: Any, llm: Any, input: str, fn_name: str) -> str:
 
                     if param_type == "number":
                         value = float(llm_output)
-                        output += str(value)
+                        output += json.dumps(value)
                     elif param_type == "integer":
                         value = int(llm_output)
-                        output += str(value)
+                        output += json.dumps(value)
                     elif param_type == "boolean":
                         value = llm_output.strip().lower() == "true"
-                        output += str(value)
+                        output += json.dumps(value)
                     elif param_type == "string":
-                        output += llm_output + '"'
+                        output += json.dumps(llm_output)
                     else:
                         output += llm_output
 

@@ -1,4 +1,4 @@
-.PHONY: help install dev-install run test lint format clean
+.PHONY: help install dev-install run test lint format clean cache
 
 help:
 	@echo "call_me_maybe - Function calling with a small LLM"
@@ -18,17 +18,19 @@ help:
 	@echo "  make run DEFS=path/to/defs.json INPUT=path/to/input.json OUTPUT=path/to/output.json"
 
 cache:
-	export HF_HOME="$HOME/sgoinfre/gpatrici/call_me_maybe/llm_sdk/.cache/huggingface"
-	export HF_HUB_CACHE="$HOME/sgoinfre/gpatrici/call_me_maybe/llm_sdk/.cache/huggingface/hub"
-	export TRANSFORMERS_CACHE="$HOME/sgoinfre/gpatrici/call_me_maybe/llm_sdk/.cache/huggingface/transformers"
-	export TORCH_HOME="$HOME/sgoinfre/gpatrici/call_me_maybe/llm_sdk/.cache/torch"
-	export XDG_CACHE_HOME="$HOME/sgoinfre/gpatrici/call_me_maybe/llm_sdk/.cache/xdg"
+	export UV_CACHE_DIR="$HOME/sgoinfre/.cache/.uv_cache"
+	export HF_HOME="$HOME/sgoinfre/.cache/huggingface"
+	export HF_HUB_CACHE="$HOME/sgoinfre/.cache/huggingface/hub"
+	export TRANSFORMERS_CACHE="$HOME/sgoinfre/.cache/huggingface/transformers"
+	export TORCH_HOME="$HOME/sgoinfre/.cache/torch"
+	export XDG_CACHE_HOME="$HOME/sgoinfre/.cache/xdg"
 
 install:
 	cache
 	uv pip install -e .
 
 fix-accelerate:
+	cache
 	uv pip install accelerate
 
 dev-install:

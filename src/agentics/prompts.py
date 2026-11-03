@@ -60,7 +60,7 @@ def handle_name(functions: Any, llm: Any, input: str) -> str:
 
         trie = build_trie(function_names, llm)
         tokens = llm.encode(input).tolist()[0]
-        name_tokens = []
+        name_tokens: list[int] = []
 
         for step in range(64):
             logits = llm.get_logits_from_input_ids(tokens)
@@ -150,8 +150,8 @@ def handle_params(functions: Any, llm: Any, input: str, fn_name: str) -> str:
                 )
 
             blacklist = REGEX_BLACKLIST if param_name == "regex" else BLACKLIST
-            # if param_type == "string":
-            #     output += '"' #TODO THIS SEEMS TO ADD AN EXTRA '"' WHEN NOT NEEDED
+            if param_type == "string":
+                output += '"'
 
             llm_output = ""
             tokens = llm.encode(input + output).tolist()[0]
@@ -175,7 +175,7 @@ def handle_params(functions: Any, llm: Any, input: str, fn_name: str) -> str:
                         value = llm_output.strip().lower() == "true"
                         output += json.dumps(value)
                     elif param_type == "string":
-                        output += json.dumps(llm_output)
+                        output += json.dumps(llm_output)[1:-1] + '"'
                     else:
                         output += llm_output
 

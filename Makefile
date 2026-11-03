@@ -17,13 +17,22 @@ help:
 	@echo "Run with custom files:"
 	@echo "  make run DEFS=path/to/defs.json INPUT=path/to/input.json OUTPUT=path/to/output.json"
 
+cache:
+	export HF_HOME="$HOME/sgoinfre/gpatrici/call_me_maybe/llm_sdk/.cache/huggingface"
+	export HF_HUB_CACHE="$HOME/sgoinfre/gpatrici/call_me_maybe/llm_sdk/.cache/huggingface/hub"
+	export TRANSFORMERS_CACHE="$HOME/sgoinfre/gpatrici/call_me_maybe/llm_sdk/.cache/huggingface/transformers"
+	export TORCH_HOME="$HOME/sgoinfre/gpatrici/call_me_maybe/llm_sdk/.cache/torch"
+	export XDG_CACHE_HOME="$HOME/sgoinfre/gpatrici/call_me_maybe/llm_sdk/.cache/xdg"
+
 install:
+	cache
 	uv pip install -e .
 
 fix-accelerate:
 	uv pip install accelerate
 
 dev-install:
+	cache
 	uv pip install -e ".[dev]"
 
 DEFS ?= data/input/functions_definition.json

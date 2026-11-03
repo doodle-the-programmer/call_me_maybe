@@ -50,6 +50,43 @@ def promptify(user_text: str, functions: Any) -> str:
     )
 
 
+def _normalize_functions(functions: Any) -> list[dict[str, Any]]:
+    """Return function definitions as a validated list of dicts."""
+    if isinstance(functions, str):
+        try:
+            functions = json.loads(functions)
+        except json.JSONDecodeError as exc:
+            raise FunctionSelectionError(
+                f"Invalid function definitions JSON: {exc}"
+            )
+
+    if not isinstance(functions, list):
+        raise FunctionSelectionError(
+            f"Function definitions must be a list, got "
+            f"{type(functions).__name__}."
+        )
+
+    if any(not isinstance(function, dict) for function in functions):
+        raise FunctionSelectionError(
+            "Function definitions must be a list of objects."
+        )
+
+    return functions
+
+
+def _get_function_by_name(
+    functions: list[dict[str, Any]], fn_name: str
+) -> dict[str, Any]:
+    """Find a function definition by name or raise FunctionNotFoundError."""
+    for function in functions:
+        if function.get("name") == fn_name:
+            return function
+
+    raise FunctionNotFoundError(
+        f"Function {fn_name!r} not found in definitions."
+    )
+
+
 def handle_name(functions: Any, llm: Any, input: str) -> str:
     """Select function name using trie-constrained token generation."""
     try:
@@ -126,16 +163,7 @@ def _validate_param_value(
 def handle_params(functions: Any, llm: Any, input: str, fn_name: str) -> str:
     """Generate JSON parameters using schema-aware token selection."""
     try:
-        selected_function = None
-        for function in functions:
-            if function["name"] == fn_name:
-                selected_function = function
-                break
-
-        if selected_function is None:
-            raise FunctionNotFoundError(
-                f"Function {fn_name!r} not found in definitions."
-            )
+        selected_function = _get_function_by_name(functions, fn_name)
 
         output = "{"
         params = selected_function["parameters"]
@@ -217,16 +245,20 @@ def handle_params(functions: Any, llm: Any, input: str, fn_name: str) -> str:
 
 
 def handle_prompt(llm: Any, prompt: str, functions: str) -> str:
-    input = promptify(prompt, functions)
+    functions_data = _normalize_functions(functions)
+
+    input = promptify(prompt, functions_data)
 
     input = input + '{\n\t"prompt": ' + prompt + ',\n\t"name": "'
     output = '{\n\t"prompt": ' + prompt + ',\n\t"name": "'
 
-    fn_name = handle_name(functions, llm, input)
-    input += fn_name + '",\n\t"parameters":'
+    fn_name = handle_name(functions_data, llm, input)
     output += fn_name + '",\n\t"parameters":'
 
-    fn_params = handle_params(functions, llm, input, fn_name)
+    selected_function = _get_function_by_name(functions_data, fn_name)
+    input = promptify(prompt, [selected_function]) + output
+
+    fn_params = handle_params([selected_function], llm, input, fn_name)
     input += fn_params + "\n}"
     output += fn_params + "\n}"
 

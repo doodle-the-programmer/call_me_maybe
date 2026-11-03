@@ -81,7 +81,7 @@
     "prompt": "Format template: Say \"hello\" to {name}",
     "name": "fn_format_template",
     "parameters": {
-      "template": "hello"
+      "template": "Say \\"
     }
   }
 ]

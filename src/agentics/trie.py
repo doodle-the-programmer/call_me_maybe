@@ -29,15 +29,23 @@ def allowed_next_tokens(trie_root, token_seq):
 
 
 def constrained_next_token(logits, allowed_tokens):
-    """Select the highest-scoring token from allowed set of tokens."""
-    best = None
-    best_val = float("-inf")
+    """Select highest-scoring token from allowed set of tokens."""
+    allowed = list(allowed_tokens)
+    if not allowed:
+        raise ValueError("allowed_tokens cannot be empty")
 
-    for i in allowed_tokens:
-        i = int(i)
+    # For larger candidate sets, use native vectorized argmax if available.
+    if len(allowed) >= 32 and hasattr(logits, "argmax"):
+        subset = logits[allowed]
+        best_pos = int(subset.argmax())
+        return int(allowed[best_pos])
 
-        if logits[i] > best_val:
-            best_val = logits[i]
-            best = i
-
+    # Small candidate sets are often faster with a tight Python loop.
+    best = allowed[0]
+    best_val = logits[best]
+    for tok in allowed[1:]:
+        val = logits[tok]
+        if val > best_val:
+            best = tok
+            best_val = val
     return int(best)

@@ -139,8 +139,11 @@ def handle_params(functions: Any, llm: Any, input: str, fn_name: str) -> str:
 
         output = "{"
         params = selected_function["parameters"]
+        params_items = list(params.items())
+        params_last_idx = len(params_items) - 1
+        decode_cache: dict[int, str] = {}
 
-        for i, (param_name, param_info) in enumerate(params.items()):
+        for i, (param_name, param_info) in enumerate(params_items):
             output += f'"{param_name}": '
 
             param_type = param_info.get("type")
@@ -158,8 +161,15 @@ def handle_params(functions: Any, llm: Any, input: str, fn_name: str) -> str:
 
             for step in range(64):
                 logits = llm.get_logits_from_input_ids(tokens)
-                next_token = max(range(len(logits)), key=logits.__getitem__)
-                text = llm.decode([next_token])
+                if hasattr(logits, "argmax"):
+                    next_token = int(logits.argmax())
+                else:
+                    next_token = max(range(len(logits)),
+                                     key=logits.__getitem__)
+                text = decode_cache.get(next_token)
+                if text is None:
+                    text = llm.decode([next_token])
+                    decode_cache[next_token] = text
 
                 if any(c in blacklist for c in text):
                     llm_output += text.strip(blacklist)
@@ -179,7 +189,7 @@ def handle_params(functions: Any, llm: Any, input: str, fn_name: str) -> str:
                     else:
                         output += llm_output
 
-                    if i < len(params) - 1:
+                    if i < params_last_idx:
                         output += ", "
                     break
                 else:

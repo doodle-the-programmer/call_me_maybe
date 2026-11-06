@@ -1,55 +1,79 @@
-"""Custom exception hierarchy for the function-calling pipeline."""
+"""custom exception hierarchy for the function-calling pipeline"""
 
 
 class CallMeMaybeError(Exception):
-    """Base exception for all project-specific errors."""
+    "base class for all project-specific errors"
 
     pass
 
 
 class FileToJSONError(CallMeMaybeError):
-    """Error reading or parsing JSON from file."""
+    "error reading or parsing json from a file"
 
     pass
 
 
 class SchemaValidationError(CallMeMaybeError):
-    """Error validating function schema or parameter definitions."""
+    "error validating function schema or parameter definitions"
 
     pass
 
 
 class FunctionNotFoundError(CallMeMaybeError):
-    """Error when selected function name does not exist in definitions."""
+    "error when the selected function name is not in the definitions"
 
     pass
 
 
 class ParameterGenerationError(CallMeMaybeError):
-    """Error during parameter value generation from model."""
+    "error during parameter value generation from the model"
 
     pass
 
 
 class ParameterTimeoutError(ParameterGenerationError):
-    """Error when parameter generation exceeds maximum steps."""
+    "error when parameter generation runs past the step limit"
 
     pass
 
 
 class ParameterTypeError(ParameterGenerationError):
-    """Error when generated parameter value does not match expected type."""
+    "error when a generated parameter value does not match the expected type"
 
     pass
 
 
 class OutputValidationError(CallMeMaybeError):
-    """Error validating generated output against schema."""
+    "error validating generated output against the schema"
 
     pass
 
 
 class FunctionSelectionError(CallMeMaybeError):
-    """Error during function name selection from model."""
+    "error during function name selection from the model"
+
+    pass
+
+
+class CacheConfigurationError(CallMeMaybeError):
+    "error setting up local model download cache directories"
+
+    pass
+
+
+class ModelLoadError(CallMeMaybeError):
+    "error loading the llm used to run the pipeline"
+
+    pass
+
+
+class OutputWriteError(CallMeMaybeError):
+    "error writing pipeline results to the output file"
+
+    pass
+
+
+class PipelineOutputError(CallMeMaybeError):
+    "error parsing the combined pipeline results as json"
 
     pass

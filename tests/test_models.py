@@ -1,4 +1,4 @@
-"""Tests for pydantic models."""
+"""tests for pydantic models"""
 
 import pytest
 from pydantic import ValidationError
@@ -14,16 +14,16 @@ from src.models import (
 
 
 class TestParameterDefinition:
-    """Tests for ParameterDefinition model."""
+    "tests for the parameter definition model"
 
     def test_valid_parameter_definition(self):
-        """Test creating a valid parameter definition."""
+        "test creating a valid parameter definition"
         param = ParameterDefinition(type="string")
         assert param.type == "string"
         assert param.description is None
 
     def test_parameter_with_description(self):
-        """Test parameter definition with description."""
+        "test a parameter definition with a description"
         param = ParameterDefinition(
             type="number", description="A numeric parameter"
         )
@@ -31,34 +31,34 @@ class TestParameterDefinition:
         assert param.description == "A numeric parameter"
 
     def test_all_valid_types(self):
-        """Test all valid parameter types."""
+        "test all valid parameter types"
         for valid_type in ["string", "number", "integer", "boolean"]:
             param = ParameterDefinition(type=valid_type)
             assert param.type == valid_type
 
     def test_invalid_type_raises_error(self):
-        """Test that invalid type raises ValidationError."""
+        "test that an invalid type raises validation error"
         with pytest.raises(ValidationError) as exc_info:
             ParameterDefinition(type="invalid")
         assert "type must be one of" in str(exc_info.value)
 
     def test_empty_type_raises_error(self):
-        """Test that empty type raises ValidationError."""
+        "test that an empty type raises validation error"
         with pytest.raises(ValidationError):
             ParameterDefinition(type="")
 
 
 class TestReturnDefinition:
-    """Tests for ReturnDefinition model."""
+    "tests for the return definition model"
 
     def test_valid_return_definition(self):
-        """Test creating a valid return definition."""
+        "test creating a valid return definition"
         ret = ReturnDefinition(type="string")
         assert ret.type == "string"
         assert ret.description is None
 
     def test_return_with_description(self):
-        """Test return definition with description."""
+        "test a return definition with a description"
         ret = ReturnDefinition(
             type="number", description="Returns a numeric value"
         )
@@ -67,10 +67,10 @@ class TestReturnDefinition:
 
 
 class TestFunctionDefinition:
-    """Tests for FunctionDefinition model."""
+    "tests for the function definition model"
 
     def test_valid_function_definition(self):
-        """Test creating a valid function definition."""
+        "test creating a valid function definition"
         fn = FunctionDefinition(
             name="fn_add",
             description="Add two numbers",
@@ -86,7 +86,7 @@ class TestFunctionDefinition:
         assert fn.returns is not None
 
     def test_function_without_returns(self):
-        """Test function definition without return type."""
+        "test a function definition without a return type"
         fn = FunctionDefinition(
             name="fn_print",
             description="Print something",
@@ -97,7 +97,7 @@ class TestFunctionDefinition:
         assert fn.returns is None
 
     def test_function_with_dict_parameters(self):
-        """Test function definition with dict-style parameters."""
+        "test a function definition that uses dict-style parameters"
         fn = FunctionDefinition(
             name="fn_test",
             description="Test function",
@@ -110,7 +110,7 @@ class TestFunctionDefinition:
         assert isinstance(fn.parameters["param1"], ParameterDefinition)
 
     def test_invalid_function_name_raises_error(self):
-        """Test that invalid function name raises ValidationError."""
+        "test that an invalid function name raises validation error"
         with pytest.raises(ValidationError):
             FunctionDefinition(
                 name="123-invalid",
@@ -121,7 +121,7 @@ class TestFunctionDefinition:
             )
 
     def test_empty_function_name_raises_error(self):
-        """Test that empty function name raises ValidationError."""
+        "test that an empty function name raises validation error"
         with pytest.raises(ValidationError):
             FunctionDefinition(
                 name="",
@@ -132,7 +132,7 @@ class TestFunctionDefinition:
             )
 
     def test_empty_parameters_raises_error(self):
-        """Test that empty parameters dict raises ValidationError."""
+        "test that an empty parameters dict raises validation error"
         with pytest.raises(ValidationError):
             FunctionDefinition(
                 name="fn_test",
@@ -141,7 +141,7 @@ class TestFunctionDefinition:
             )
 
     def test_function_definition_dict_conversion(self):
-        """Test converting function definition to dict."""
+        "test converting a function definition to a dict"
         fn = FunctionDefinition(
             name="fn_add",
             description="Add two numbers",
@@ -156,7 +156,7 @@ class TestFunctionDefinition:
         assert len(fn_dict["parameters"]) == 2
 
     def test_function_definition_json_roundtrip(self):
-        """Test JSON serialization and deserialization."""
+        "test json serialization and deserialization"
         fn = FunctionDefinition(
             name="fn_greet",
             description="Greet someone",
@@ -173,25 +173,25 @@ class TestFunctionDefinition:
 
 
 class TestPromptInput:
-    """Tests for PromptInput model."""
+    "tests for the prompt input model"
 
     def test_valid_prompt_input(self):
-        """Test creating a valid prompt input."""
+        "test creating a valid prompt input"
         prompt = PromptInput(prompt="What is the sum of 2 and 3?")
         assert prompt.prompt == "What is the sum of 2 and 3?"
 
     def test_empty_prompt_raises_error(self):
-        """Test that empty prompt raises ValidationError."""
+        "test that an empty prompt raises validation error"
         with pytest.raises(ValidationError):
             PromptInput(prompt="")
 
     def test_whitespace_only_prompt_raises_error(self):
-        """Test that whitespace-only prompt raises ValidationError."""
+        "test that whitespace-only input raises validation error"
         with pytest.raises(ValidationError):
             PromptInput(prompt="   \n\t  ")
 
     def test_prompt_input_json_roundtrip(self):
-        """Test JSON serialization and deserialization."""
+        "test json serialization and deserialization"
         prompt = PromptInput(prompt="Test prompt")
         json_str = prompt.model_dump_json()
         prompt_restored = PromptInput.model_validate_json(json_str)
@@ -199,22 +199,22 @@ class TestPromptInput:
 
 
 class TestFunctionCall:
-    """Tests for FunctionCall model."""
+    "tests for the function call model"
 
     def test_valid_function_call(self):
-        """Test creating a valid function call."""
+        "test creating a valid function call"
         call = FunctionCall(name="fn_add", parameters={"a": 2, "b": 3})
         assert call.name == "fn_add"
         assert call.parameters == {"a": 2, "b": 3}
 
     def test_function_call_with_empty_parameters(self):
-        """Test function call with empty parameters dict."""
+        "test a function call with an empty parameters dict"
         call = FunctionCall(name="fn_test", parameters={})
         assert call.name == "fn_test"
         assert call.parameters == {}
 
     def test_function_call_with_various_types(self):
-        """Test function call with various parameter types."""
+        "test a function call with several parameter types"
         call = FunctionCall(
             name="fn_complex",
             parameters={
@@ -228,22 +228,22 @@ class TestFunctionCall:
         assert len(call.parameters) == 5
 
     def test_empty_function_name_raises_error(self):
-        """Test that empty function name raises ValidationError."""
+        "test that an empty function name raises validation error"
         with pytest.raises(ValidationError):
             FunctionCall(name="", parameters={"a": 1})
 
     def test_whitespace_function_name_raises_error(self):
-        """Test that whitespace-only function name raises ValidationError."""
+        "test that a whitespace-only function name raises validation error"
         with pytest.raises(ValidationError):
             FunctionCall(name="   ", parameters={"a": 1})
 
     def test_non_dict_parameters_raises_error(self):
-        """Test that non-dict parameters raise ValidationError."""
+        "test that a non-dict value raises validation error"
         with pytest.raises(ValidationError):
             FunctionCall(name="fn_test", parameters="not a dict")
 
     def test_function_call_json_roundtrip(self):
-        """Test JSON serialization and deserialization."""
+        "test json serialization and deserialization"
         call = FunctionCall(name="fn_add", parameters={"a": 5, "b": 10})
         json_str = call.model_dump_json()
         call_restored = FunctionCall.model_validate_json(json_str)
@@ -252,10 +252,10 @@ class TestFunctionCall:
 
 
 class TestFunctionCallResult:
-    """Tests for FunctionCallResult model."""
+    "tests for the function call result model"
 
     def test_successful_result(self):
-        """Test creating a successful function call result."""
+        "test creating a successful function call result"
         result = FunctionCallResult(
             name="fn_add", parameters={"a": 2, "b": 3}, result=5
         )
@@ -265,7 +265,7 @@ class TestFunctionCallResult:
         assert result.error is None
 
     def test_error_result(self):
-        """Test creating a result with an error."""
+        "test creating a result with an error"
         result = FunctionCallResult(
             name="fn_divide",
             parameters={"a": 1, "b": 0},
@@ -276,7 +276,7 @@ class TestFunctionCallResult:
         assert result.error == "Division by zero"
 
     def test_result_with_complex_return(self):
-        """Test result with complex return value."""
+        "test a result with a nested data structure"
         result = FunctionCallResult(
             name="fn_process",
             parameters={"data": [1, 2, 3]},
@@ -286,17 +286,17 @@ class TestFunctionCallResult:
         assert result.result["sum"] == 6
 
     def test_result_with_none_result(self):
-        """Test result with None as result value."""
+        "test a result with none as the result value"
         result = FunctionCallResult(name="fn_noop", parameters={}, result=None)
         assert result.result is None
 
     def test_empty_function_name_raises_error(self):
-        """Test that empty function name raises ValidationError."""
+        "test that an empty function name raises validation error"
         with pytest.raises(ValidationError):
             FunctionCallResult(name="", parameters={}, result=None)
 
     def test_function_call_result_json_roundtrip(self):
-        """Test JSON serialization and deserialization."""
+        "test json serialization and deserialization"
         result = FunctionCallResult(
             name="fn_greet",
             parameters={"name": "Alice"},
@@ -310,10 +310,10 @@ class TestFunctionCallResult:
 
 
 class TestIntegration:
-    """Integration tests with multiple models."""
+    "integration tests across several models"
 
     def test_build_full_pipeline(self):
-        """Test building a full pipeline from input to result."""
+        "test building a full pipeline from input to result"
         fn_def = FunctionDefinition(
             name="fn_add",
             description="Add two numbers",
@@ -334,7 +334,7 @@ class TestIntegration:
         assert result.result == 5
 
     def test_multiple_functions(self):
-        """Test handling multiple function definitions."""
+        "test handling multiple function definitions"
         functions = [
             FunctionDefinition(
                 name="fn_add",

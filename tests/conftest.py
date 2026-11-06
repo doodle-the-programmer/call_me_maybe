@@ -1,4 +1,4 @@
-"""Pytest configuration and shared fixtures."""
+"""pytest config and shared fixtures"""
 
 import pytest
 
@@ -14,7 +14,7 @@ from src.models import (
 
 @pytest.fixture
 def sample_number_param():
-    """Fixture for a number parameter."""
+    "fixture for a number parameter"
     return ParameterDefinition(
         type="number", description="A numeric parameter"
     )
@@ -22,13 +22,13 @@ def sample_number_param():
 
 @pytest.fixture
 def sample_string_param():
-    """Fixture for a string parameter."""
+    "fixture for a string parameter"
     return ParameterDefinition(type="string", description="A string parameter")
 
 
 @pytest.fixture
 def sample_add_function():
-    """Fixture for an add function definition."""
+    "fixture for an add function definition"
     return FunctionDefinition(
         name="fn_add",
         description="Add two numbers together",
@@ -42,7 +42,7 @@ def sample_add_function():
 
 @pytest.fixture
 def sample_greet_function():
-    """Fixture for a greet function definition."""
+    "fixture for a greet function definition"
     return FunctionDefinition(
         name="fn_greet",
         description="Generate a greeting message",
@@ -55,7 +55,7 @@ def sample_greet_function():
 
 @pytest.fixture
 def sample_functions():
-    """Provide multiple function definitions for testing."""
+    "provide several function definitions for tests"
     return [
         FunctionDefinition(
             name="fn_add",
@@ -84,19 +84,19 @@ def sample_functions():
 
 @pytest.fixture
 def sample_prompt():
-    """Fixture for a prompt input."""
+    "fixture for a prompt input"
     return PromptInput(prompt="What is the sum of 2 and 3?")
 
 
 @pytest.fixture
 def sample_function_call():
-    """Fixture for a function call."""
+    "fixture for a function call"
     return FunctionCall(name="fn_add", parameters={"a": 2, "b": 3})
 
 
 @pytest.fixture
 def sample_function_call_result():
-    """Fixture for a successful function call result."""
+    "fixture for a successful function call result"
     return FunctionCallResult(
         name="fn_add", parameters={"a": 2, "b": 3}, result=5
     )
@@ -104,7 +104,7 @@ def sample_function_call_result():
 
 @pytest.fixture
 def sample_error_result():
-    """Fixture for an error function call result."""
+    "fixture for an error function call result"
     return FunctionCallResult(
         name="fn_divide", parameters={"a": 1, "b": 0}, error="Division by zero"
     )

@@ -10,12 +10,12 @@ from src.errors.types import (
 
 from .trie import allowed_next_tokens, build_trie, constrained_next_token
 
-BLACKLIST = ',{}"[]()\t\n'
+BLACKLIST = ',{}[]()"\t\n'
 REGEX_BLACKLIST = '",'
 
 
 def is_end(trie, token_seq):
-    """Check if token sequence is a valid end point in the trie."""
+    "check if a token sequence is a valid end point in the trie"
     node = trie
     for t in token_seq:
         node = node["children"][t]
@@ -23,7 +23,7 @@ def is_end(trie, token_seq):
 
 
 def promptify(user_text: str, functions: Any) -> str:
-    """Build system prompt with function definitions and user text."""
+    "build the system prompt with function definitions and the user text"
     return (
         f"<|im_start|>system\n"
         f"As an Agent you have access to the following functions:\n"
@@ -34,7 +34,7 @@ def promptify(user_text: str, functions: Any) -> str:
         f"'number' must be written according to Python's float type\n"
         f"'integer' must be written according to Python's int type\n"
         f"If the type is 'string' it could be anything "
-        f"from a name to a REGEX or SQL (in the correct text format)."
+        f"from a name to a REGEX or SQL (in the correct text format). "
         f"In the case of a string do not include single or double quotes"
         """
         {
@@ -51,7 +51,7 @@ def promptify(user_text: str, functions: Any) -> str:
 
 
 def _normalize_functions(functions: Any) -> list[dict[str, Any]]:
-    """Return function definitions as a validated list of dicts."""
+    "return function definitions as a validated list of dicts"
     if isinstance(functions, str):
         try:
             functions = json.loads(functions)
@@ -77,7 +77,7 @@ def _normalize_functions(functions: Any) -> list[dict[str, Any]]:
 def _get_function_by_name(
     functions: list[dict[str, Any]], fn_name: str
 ) -> dict[str, Any]:
-    """Find a function definition by name or raise FunctionNotFoundError."""
+    "find a function definition by name or raise a not found error"
     for function in functions:
         if function.get("name") == fn_name:
             return function
@@ -88,7 +88,7 @@ def _get_function_by_name(
 
 
 def handle_name(functions: Any, llm: Any, input: str) -> str:
-    """Select function name using trie-constrained token generation."""
+    "pick a function name using trie-constrained generation"
     try:
         output = ""
         function_names = [f["name"] for f in functions]
@@ -138,7 +138,7 @@ def handle_name(functions: Any, llm: Any, input: str) -> str:
 def _validate_param_value(
     value: str, param_type: str, param_name: str
 ) -> None:
-    """Validate that a generated value matches its parameter type."""
+    "check that a generated value matches its parameter type"
     try:
         if param_type == "boolean" and value not in {"True", "False"}:
             raise ParameterTypeError(
@@ -161,7 +161,7 @@ def _validate_param_value(
 
 
 def handle_params(functions: Any, llm: Any, input: str, fn_name: str) -> str:
-    """Generate JSON parameters using schema-aware token selection."""
+    "create json parameters from the selected function schema"
     try:
         selected_function = _get_function_by_name(functions, fn_name)
 
@@ -245,6 +245,7 @@ def handle_params(functions: Any, llm: Any, input: str, fn_name: str) -> str:
 
 
 def handle_prompt(llm: Any, prompt: str, functions: str) -> str:
+    "build the full prompt and return the selected function call output"
     functions_data = _normalize_functions(functions)
 
     input = promptify(prompt, functions_data)

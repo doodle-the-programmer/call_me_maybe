@@ -1,13 +1,26 @@
 import argparse
+import json
 import os
 import sys
 from typing import Any, Sequence
 
 from llm_sdk import Small_LLM_Model
 from src.agentics.prompts import handle_prompt
-from src.errors.types import CallMeMaybeError
-from src.imports.safe_imports import configure_local_download_cache
+from src.errors.types import (
+    CallMeMaybeError,
+    ModelLoadError,
+    OutputWriteError,
+    PipelineOutputError,
+)
 from src.parsing.parser import dump_json, get_data_from_input, load_to_json
+
+
+def _load_llm() -> Any:
+    "load the local llm, wrapping any failure in a project-specific error"
+    try:
+        return Small_LLM_Model()
+    except Exception as exc:
+        raise ModelLoadError(f"Failed to load the LLM model: {exc}")
 
 
 def call_me_maybe(
@@ -15,15 +28,16 @@ def call_me_maybe(
     output: str = "data/output/function_calling_results.json",
     fns: str = "data/input/functions_definition.json",
 ) -> Any:
-    """Run the function-calling pipeline over all prompts in the input file."""
-    configure_local_download_cache()
+    "run the function-calling pipeline over all prompts in the input file"
     data = get_data_from_input(input, fns)
-    llm = Small_LLM_Model()
+    llm = _load_llm()
 
-    i = 0
+    prompts = data["input"]
+    last_index = len(prompts) - 1
     results = "["
     print("[", end="", flush=True)
-    for prompt_idx, prompt in enumerate(data["input"]):
+
+    for index, prompt in enumerate(prompts):
         try:
             result = handle_prompt(
                 llm, dump_json(prompt["prompt"]), data["functions"]
@@ -31,36 +45,44 @@ def call_me_maybe(
             print(result, end="", flush=True)
             results += result
         except CallMeMaybeError as exc:
-            error_msg = f'{{"error": "{exc.__class__.__name__}: {exc}"}}'
+            error_msg = json.dumps(
+                {"error": f"{exc.__class__.__name__}: {exc}"}
+            )
             print(error_msg, end="", flush=True)
             results += error_msg
         except Exception as exc:
-            error_msg = f'{{"error": "Unexpected error: {exc}"}}'
+            error_msg = json.dumps({"error": f"Unexpected error: {exc}"})
             print(error_msg, end="", flush=True)
             results += error_msg
 
-        if i < len(data["input"]) - 1:
+        if index < last_index:
             results += ",\n"
             print(",\n", end="", flush=True)
-            i += 1
 
     results += "]"
     print("]", end="", flush=True)
 
-    results = load_to_json(results)
+    try:
+        parsed_results = load_to_json(results)
+    except Exception as exc:
+        raise PipelineOutputError(
+            f"Failed to parse combined pipeline output as JSON: {exc}"
+        )
 
     output_dir = os.path.dirname(output)
-    if output_dir:
-        os.makedirs(output_dir, exist_ok=True)
+    try:
+        if output_dir:
+            os.makedirs(output_dir, exist_ok=True)
+        with open(output, "w") as output_file:
+            output_file.write(dump_json(parsed_results))
+    except OSError as exc:
+        raise OutputWriteError(f"Failed to write output to {output}: {exc}")
 
-    with open(output, "w") as output_file:
-        output_file.write(dump_json(results))
-
-    return results
+    return parsed_results
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Parse CLI arguments and run the project entrypoint."""
+    "parse cli args and run the project entrypoint"
     parser = argparse.ArgumentParser(
         description="Run the function-calling pipeline."
     )

@@ -1,1 +1,1 @@
-"""Test suite for call_me_maybe project."""
+"""test suite for the call_me_maybe project"""

@@ -1,5 +1,5 @@
 def build_trie(function_names, llm):
-    """Build a trie of tokenized function names for constrained decoding."""
+    "build a trie of tokenized function names for constrained decoding"
     root = {"children": {}, "end": False}
 
     for name in function_names:
@@ -17,7 +17,7 @@ def build_trie(function_names, llm):
 
 
 def allowed_next_tokens(trie_root, token_seq):
-    """Get valid token continuations from current position in trie."""
+    "get valid token continuations from the current trie position"
     node = trie_root
 
     for t in token_seq:
@@ -29,18 +29,18 @@ def allowed_next_tokens(trie_root, token_seq):
 
 
 def constrained_next_token(logits, allowed_tokens):
-    """Select highest-scoring token from allowed set of tokens."""
+    "pick the best token from the allowed set"
     allowed = list(allowed_tokens)
     if not allowed:
         raise ValueError("allowed_tokens cannot be empty")
 
-    # For larger candidate sets, use native vectorized argmax if available.
+    # use the native vectorized argmax when there are many options
     if len(allowed) >= 32 and hasattr(logits, "argmax"):
         subset = logits[allowed]
         best_pos = int(subset.argmax())
         return int(allowed[best_pos])
 
-    # Small candidate sets are often faster with a tight Python loop.
+    # small sets are often faster with a tight python loop
     best = allowed[0]
     best_val = logits[best]
     for tok in allowed[1:]:

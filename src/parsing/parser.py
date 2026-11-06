@@ -1,44 +1,54 @@
 import json
-from typing import Any, Dict
+from typing import Any, Dict, List
+
+from pydantic import ValidationError
 
 from src.errors.types import FileToJSONError, SchemaValidationError
+from src.models import FunctionDefinition, PromptInput
 
 
-def _validate_functions_schema(functions: Any) -> None:
-    """Validate that the functions schema is properly formatted."""
+def _validate_functions_schema(functions: Any) -> List[Dict[str, Any]]:
+    "validate functions with the function definition model"
     if not isinstance(functions, list):
         raise SchemaValidationError(
             f"Functions must be a list, got {type(functions).__name__}."
         )
+
+    validated: List[Dict[str, Any]] = []
     for i, func in enumerate(functions):
-        if not isinstance(func, dict):
+        try:
+            model = FunctionDefinition.model_validate(func)
+        except ValidationError as exc:
             raise SchemaValidationError(
-                f"Function at index {i} must be a dict, "
-                f"got {type(func).__name__}."
+                f"Function at index {i} is invalid: {exc}"
             )
-        if "name" not in func:
+        validated.append(model.model_dump())
+
+    return validated
+
+
+def _validate_prompts_schema(prompts: Any) -> List[Dict[str, Any]]:
+    "validate input prompts with the prompt input model"
+    if not isinstance(prompts, list):
+        raise SchemaValidationError(
+            f"Input prompts must be a list, got {type(prompts).__name__}."
+        )
+
+    validated: List[Dict[str, Any]] = []
+    for i, item in enumerate(prompts):
+        try:
+            model = PromptInput.model_validate(item)
+        except ValidationError as exc:
             raise SchemaValidationError(
-                f"Function at index {i} is missing 'name' field."
+                f"Prompt at index {i} is invalid: {exc}"
             )
-        if "parameters" not in func:
-            raise SchemaValidationError(
-                f"Function at index {i} is missing 'parameters' field."
-            )
-        params = func["parameters"]
-        if not isinstance(params, dict):
-            raise SchemaValidationError(
-                f"Function {func['name']}: parameters must be a dict, "
-                f"got {type(params).__name__}."
-            )
-        for param_name, param_info in params.items():
-            if not isinstance(param_info, dict) or "type" not in param_info:
-                raise SchemaValidationError(
-                    f"Function {func['name']}, parameter {param_name!r}: "
-                    f"missing or invalid 'type' field."
-                )
+        validated.append(model.model_dump())
+
+    return validated
 
 
 def get_data_from_input(input: str, functions: str) -> Dict[str, Any]:
+    "read input and function definitions from json files and check the schema"
     decoder = json.decoder.JSONDecoder()
     try:
         with open(input) as input_file:
@@ -60,17 +70,20 @@ def get_data_from_input(input: str, functions: str) -> Dict[str, Any]:
     except Exception as e:
         raise FileToJSONError(f"Error reading/parsing from {functions}: {e}")
 
-    _validate_functions_schema(function_data)
+    validated_functions = _validate_functions_schema(function_data)
+    validated_prompts = _validate_prompts_schema(input_data)
 
-    return {"input": input_data, "functions": function_data}
+    return {"input": validated_prompts, "functions": validated_functions}
 
 
 def load_to_json(json_str: str) -> Any:
+    "load a json string into python data"
     return json.loads(json_str)
 
 
-# This is here for a very particular case where when extracting the JSON data
-# from calling_tests it doesnt add a \ before some of the "s,
-# which later breaks json.loads
+# this keeps json strings safe when model output is missing escapes
+# this can break json.loads
+
 def dump_json(string: str) -> str:
+    "turn a string into a json string for safe output"
     return json.dumps(string, indent=2)

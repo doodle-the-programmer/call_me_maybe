@@ -1,4 +1,4 @@
-"""Tests for pydantic models with real project data."""
+"""tests using real project data"""
 
 import json
 
@@ -11,10 +11,10 @@ from src.models import (
 
 
 class TestRealDataValidation:
-    """Tests using real data from the project files."""
+    "tests using real project data files"
 
     def test_load_function_definitions_from_json(self):
-        """Test loading and validating function definitions from JSON."""
+        "test loading and validating function definitions from json"
         with open("data/input/functions_definition.json") as f:
             functions_data = json.load(f)
         functions = [
@@ -27,7 +27,7 @@ class TestRealDataValidation:
         assert all(fn.parameters for fn in functions)
 
     def test_load_prompts_from_json(self):
-        """Test loading and validating prompts from JSON."""
+        "test loading and validating prompts from json"
         with open("data/input/function_calling_tests.json") as f:
             prompts_data = json.load(f)
         prompts = [
@@ -38,7 +38,7 @@ class TestRealDataValidation:
         assert all(prompt.prompt for prompt in prompts)
 
     def test_generated_function_calls_validation(self):
-        """Test validating generated function call outputs."""
+        "test validating generated function call outputs"
         calls = [
             FunctionCall(
                 name="fn_add_numbers", parameters={"a": 2.0, "b": 3.0}
@@ -51,7 +51,7 @@ class TestRealDataValidation:
             assert call.parameters
 
     def test_function_call_results_validation(self):
-        """Test validating function call results."""
+        "test validating function call result objects"
         results = [
             FunctionCallResult(
                 name="fn_add_numbers",
@@ -77,14 +77,14 @@ class TestRealDataValidation:
                 assert result.result is not None
 
     def test_round_trip_validation(self):
-        """Test round-trip validation through JSON."""
+        "test round-trip validation through json"
         with open("data/input/functions_definition.json") as f:
             functions_data = json.load(f)
         for fn_data in functions_data[:3]:
             fn = FunctionDefinition.model_validate(fn_data)
             fn_dict = fn.model_dump()
 
-            # Validate the dict can be re-parsed
+            # validate the dict can be parsed again
             fn_restored = FunctionDefinition.model_validate(fn_dict)
             assert fn_restored.name == fn.name
             assert fn_restored.description == fn.description

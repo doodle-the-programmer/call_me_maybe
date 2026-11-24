@@ -1,4 +1,4 @@
-.PHONY: help venv venv-shell init-venv install dev-install run test test-cov lint format clean cache fix-accelerate
+.PHONY: help venv install dev-install run test lint clean cache fix-accelerate
 
 CACHE_BASE ?= $(HOME)/sgoinfre/.cache
 PROJECT_ENV ?= $(HOME)/sgoinfre/.venvs/call_me_maybe
@@ -16,15 +16,11 @@ help:
 	@echo ""
 	@echo "Available targets:"
 	@echo "  venv         Create virtual environment in PROJECT_ENV"
-	@echo "  venv-shell   Start an interactive shell with the venv activated"
-	@echo "  init-venv    Create virtual environment and install dependencies"
 	@echo "  install      Install dependencies"
 	@echo "  dev-install  Install dependencies including dev tools (pytest, etc)"
 	@echo "  run          Run the pipeline with default arguments"
 	@echo "  test         Run the test suite"
-	@echo "  test-cov     Run tests with coverage report"
 	@echo "  lint         Run linters (flake8, mypy)"
-	@echo "  format       Format code with black and isort"
 	@echo "  clean        Remove build artifacts and cache files"
 	@echo "  help         Show this help message"
 	@echo ""
@@ -39,14 +35,12 @@ venv: cache
 	@mkdir -p "$(dir $(PROJECT_ENV))"
 	python3 -m venv "$(PROJECT_ENV)"
 
-venv-shell: venv
-	@echo "Starting shell with venv activated (exit to return)..."
-	@. "$(PROJECT_ENV)/bin/activate" && exec "$$SHELL" -i
-
 install: cache
 	pip install uv
 	uv sync
 
+#Rule made because in my old Personal Computer
+# it required accelerate for some reason
 fix-accelerate: cache
 	uv pip install accelerate
 
@@ -64,9 +58,6 @@ run:
 test:
 	pytest
 
-test-cov:
-	pytest --cov=src --cov-report=html --cov-report=term
-
 lint:
 	@echo "Running flake8..."
 	flake8 src/ tests/ --max-line-length=79 --count --show-source
@@ -74,12 +65,12 @@ lint:
 	@echo "Running mypy..."
 	mypy src/ --ignore-missing-imports
 
-format:
-	@echo "Running black..."
-	black src/ tests/
+lint-strict:
+	@echo "Running flake8..."
+	flake8 src/ tests/ --max-line-length=79 --count --show-source
 	@echo ""
-	@echo "Running isort..."
-	isort src/ tests/
+	@echo "Running mypy..."
+	mypy src/ --ignore-missing-imports --strict
 
 clean:
 	@echo "Cleaning up..."
